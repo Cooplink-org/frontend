@@ -9,11 +9,10 @@ import {
   YAxis,
 } from "recharts";
 import { EmptyState } from "@/components/data-state/QueryBoundary";
-import { formatMoney } from "@/lib/format";
+import { formatUZS } from "@/lib/format";
 
 interface EarningsChartProps {
-  data: { date: string; amountCents: number }[];
-  currency?: string;
+  data: { date: string; amount: number }[];
   emptyLabel?: string;
 }
 
@@ -23,12 +22,11 @@ interface EarningsChartProps {
  * 1 → single dot + flat baseline (never a "collapsed area" glitch)
  * ≥2 → area chart
  */
-export function EarningsChart({ data, currency = "USD", emptyLabel = "No earnings yet" }: EarningsChartProps) {
+export function EarningsChart({ data, emptyLabel = "No earnings yet" }: EarningsChartProps) {
   const points = useMemo(
     () =>
       [...data]
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .map((p) => ({ date: p.date, amount: p.amountCents / 100 })),
+        .sort((a, b) => a.date.localeCompare(b.date)),
     [data],
   );
 
@@ -49,7 +47,7 @@ export function EarningsChart({ data, currency = "USD", emptyLabel = "No earning
         <div>
           <div className="font-mono text-xs text-muted-foreground">{p.date}</div>
           <div className="mt-2 font-mono text-3xl tracking-tight text-foreground">
-            {formatMoney(p.amount * 100, currency)}
+            {formatUZS(p.amount)}
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
             First data point — chart appears once a second day of activity is recorded.
@@ -93,7 +91,7 @@ export function EarningsChart({ data, currency = "USD", emptyLabel = "No earning
               fontSize: 12,
             }}
             labelStyle={{ color: "var(--ink-3)" }}
-            formatter={(v: number) => [formatMoney(v * 100, currency), "revenue"]}
+            formatter={(v: number) => [formatUZS(v), "revenue"]}
           />
           <Area
             type="monotone"

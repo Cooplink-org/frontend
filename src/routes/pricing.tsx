@@ -1,64 +1,68 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { Check } from "lucide-react";
+import i18n from "@/i18n/i18n";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — Cooplink" },
-      {
-        name: "description",
-        content: "Free to list. 10% platform fee on sales. No monthly cost.",
-      },
-      { property: "og:title", content: "Pricing — Cooplink" },
-      { property: "og:description", content: "Free to list. 10% platform fee on sales." },
+      { title: i18n.t("pricing.title") },
+      { name: "description", content: i18n.t("pricing.meta_desc") },
+      { property: "og:title", content: i18n.t("pricing.title") },
+      { property: "og:description", content: i18n.t("pricing.meta_desc") },
     ],
   }),
   component: PricingPage,
 });
 
 function PricingPage() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-background">
       <MarketingHeader />
-      <section className="mx-auto max-w-4xl px-4 py-20 sm:px-6">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid mask-fade-edges opacity-50" aria-hidden />
+        <div className="absolute inset-0 bg-hero-glow opacity-60" aria-hidden />
+        <div className="relative mx-auto max-w-4xl px-4 py-20 sm:px-6">
         <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-          pricing
+          {t("pricing.section")}
         </div>
         <h1 className="mt-3 font-mono text-4xl tracking-tight text-foreground">
-          Simple. Percentage-based.
+          {t("pricing.heading")}
         </h1>
         <p className="mt-3 max-w-xl text-muted-foreground">
-          No subscriptions, no listing fees, no cost until you make a sale.
+          {t("pricing.desc")}
         </p>
 
         <div className="mt-12 grid gap-4 md:grid-cols-2">
           <PricingCard
-            name="Seller"
-            price="10%"
-            unit="/ sale"
+            name={t("pricing.seller_card")}
+            price={t("pricing.seller_fee")}
+            unit={t("pricing.per_sale")}
             features={[
-              "Unlimited listings",
-              "GitHub-native delivery",
-              "Stripe Connect payouts",
-              "Buyer disputes handled",
+              t("pricing.seller_feat1"),
+              t("pricing.seller_feat2"),
+              t("pricing.seller_feat3"),
+              t("pricing.seller_feat4"),
             ]}
-            cta={{ to: "/auth/sign-up", label: "Start selling" }}
+            cta={{ to: "/auth/sign-up", label: t("pricing.seller_cta") }}
           />
           <PricingCard
-            name="Buyer"
-            price="$0"
-            unit="/ month"
+            name={t("pricing.buyer_card")}
+            price={t("pricing.buyer_fee")}
+            unit={t("pricing.per_month")}
             features={[
-              "Purchase-based licensing",
-              "Instant repo access",
-              "Full commit history",
-              "Refunds within 7 days",
+              t("pricing.buyer_feat1"),
+              t("pricing.buyer_feat2"),
+              t("pricing.buyer_feat3"),
+              t("pricing.buyer_feat4"),
             ]}
-            cta={{ to: "/browse", label: "Browse projects" }}
+            cta={{ to: "/browse", label: t("pricing.buyer_cta") }}
             variant="muted"
           />
+        </div>
         </div>
       </section>
       <MarketingFooter />

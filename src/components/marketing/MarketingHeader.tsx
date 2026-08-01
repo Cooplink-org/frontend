@@ -1,6 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Menu, X } from "lucide-react";
+import { getAccessToken } from "@/lib/api/client";
 
 const NAV = [
   { to: "/browse", label: "Browse" },
@@ -11,6 +13,14 @@ const NAV = [
 export function MarketingHeader() {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isLoggedIn = typeof window !== "undefined" && !!getAccessToken();
+  const { i18n } = useTranslation();
+  const lang = i18n.language?.startsWith("uz") ? "uz" : i18n.language?.startsWith("ru") ? "ru" : "en";
+  const LANGS = [
+    { code: "en" as const, label: "EN" },
+    { code: "ru" as const, label: "RU" },
+    { code: "uz" as const, label: "UZ" },
+  ];
 
   return (
     <header className="sticky top-0 z-40 border-b border-border-subtle bg-background/80 backdrop-blur">
@@ -50,19 +60,48 @@ export function MarketingHeader() {
           </nav>
         </div>
 
-        <div className="hidden items-center gap-2 md:flex">
-          <Link
-            to="/auth/sign-in"
-            className="inline-flex h-8 items-center rounded-sm px-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Sign in
-          </Link>
-          <Link
-            to="/auth/sign-up"
-            className="inline-flex h-8 items-center rounded-sm bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
-          >
-            Get started
-          </Link>
+        <div className="hidden items-center gap-3 md:flex">
+          <div className="flex items-center gap-0.5 rounded-sm border border-border-subtle p-0.5">
+            {LANGS.map((l) => (
+              <button
+                key={l.code}
+                onClick={() => i18n.changeLanguage(l.code)}
+                className={`rounded-sm px-1.5 py-0.5 font-mono text-[11px] transition-colors ${
+                  lang === l.code
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+          {isLoggedIn ? (
+            <Link
+              to="/dashboard"
+              className="inline-flex h-8 items-center rounded-sm bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/auth/sign-in"
+                className="inline-flex h-8 items-center rounded-sm px-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/auth/sign-in"
+                className="inline-flex h-8 items-center rounded-sm bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
+              >
+                Get started
+              </Link>
+            </>
+          )}
+        </div>
         </div>
 
         <button
@@ -88,20 +127,47 @@ export function MarketingHeader() {
               </Link>
             ))}
             <div className="mt-2 flex gap-2 border-t border-border-subtle pt-3">
-              <Link
-                to="/auth/sign-in"
-                onClick={() => setOpen(false)}
-                className="inline-flex h-8 flex-1 items-center justify-center rounded-sm border border-border text-sm"
-              >
-                Sign in
-              </Link>
-              <Link
-                to="/auth/sign-up"
-                onClick={() => setOpen(false)}
-                className="inline-flex h-8 flex-1 items-center justify-center rounded-sm bg-primary text-sm font-medium text-primary-foreground"
-              >
-                Get started
-              </Link>
+              {isLoggedIn ? (
+                <Link
+                  to="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="inline-flex h-8 flex-1 items-center justify-center rounded-sm bg-primary text-sm font-medium text-primary-foreground"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/auth/sign-in"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex h-8 flex-1 items-center justify-center rounded-sm border border-border text-sm"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    to="/auth/sign-in"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex h-8 flex-1 items-center justify-center rounded-sm bg-primary text-sm font-medium text-primary-foreground"
+                  >
+                    Get started
+                  </Link>
+                </>
+              )}
+            </div>
+            <div className="mt-3 flex items-center justify-center gap-0.5 rounded-sm border border-border-subtle p-0.5">
+              {LANGS.map((l) => (
+                <button
+                  key={l.code}
+                  onClick={() => { i18n.changeLanguage(l.code); setOpen(false); }}
+                  className={`rounded-sm px-2 py-0.5 font-mono text-[11px] transition-colors ${
+                    lang === l.code
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {l.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>

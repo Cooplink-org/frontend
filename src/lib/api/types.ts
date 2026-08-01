@@ -1,60 +1,78 @@
-/**
- * Placeholder domain types. Replace 1:1 from API docs.
- * Every field is annotated with intent so the UI wiring is obvious.
- */
-
-export type ID = string;
+export type ID = string | number;
 export type ISODate = string;
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+}
 
 export interface User {
   id: ID;
   username: string;
-  displayName: string | null;
+  email: string;
+  githubId: string | null;
+  githubUsername: string | null;
   avatarUrl: string | null;
-  githubLogin: string | null;
-  createdAt: ISODate;
+  bio: string | null;
+  isSeller: boolean;
+  telegramChatId: string | null;
+  fullLegalName: string | null;
+  phoneNumber: string | null;
+  phoneVerified: boolean;
+  phoneVerifiedAt: ISODate | null;
+  isOnboarded: boolean;
   role: "user" | "admin";
-  onboardingComplete: boolean;
-  legalName?: string | null;
-  phone?: string | null;
+  createdAt: ISODate;
 }
 
 export type ProjectStatus = "draft" | "pending_review" | "published" | "rejected" | "removed";
+
+export interface SellerProfile {
+  username: string;
+  avatarUrl: string | null;
+  bio: string | null;
+}
 
 export interface Listing {
   id: ID;
   slug: string;
   title: string;
-  tagline: string;
-  priceCents: number;
-  currency: string; // e.g. "USD"
-  seller: Pick<User, "id" | "username" | "displayName" | "avatarUrl" | "githubLogin">;
-  categories: string[];
+  description: string;
+  price: string;
+  sellerProfile: SellerProfile | null;
+  categoryName: string | null;
   tags: string[];
   techStack: string[];
-  repoName: string;                // owner/repo
-  screenshotUrls: string[];
+  coverImage: string | null;
+  screenshots: string[];
   demoUrl: string | null;
-  status: ProjectStatus;
-  ratingAverage: number | null;    // 0..5, null if no reviews
+  featured: boolean;
+  viewCount: number;
+  averageRating: number | null;
   ratingCount: number;
   createdAt: ISODate;
-  updatedAt: ISODate;
 }
 
 export interface Project extends Listing {
-  description: string;             // markdown
-  readmeExcerpt: string | null;
-  filesCount: number | null;
-  linesOfCode: number | null;
-  licenseAfterPurchase: string;    // e.g. "commercial single-seat"
+  description: string;
+  longDescription: string | null;
+  sellerUsername: string | null;
+  githubRepoFullName: string | null;
+  githubDefaultBranch: string | null;
+  bannerImage: string | null;
+  accentColor: string | null;
+  highlights: string[];
+  licenseType: string | null;
+  version: number;
+  updatedAt: ISODate;
 }
 
 export interface Review {
   id: ID;
   projectId: ID;
-  author: Pick<User, "id" | "username" | "displayName" | "avatarUrl">;
-  rating: number; // 1..5
+  author: Pick<User, "id" | "username" | "avatarUrl">;
+  rating: number;
   body: string;
   createdAt: ISODate;
 }
@@ -62,43 +80,79 @@ export interface Review {
 export interface QAThread {
   id: ID;
   projectId: ID;
-  author: Pick<User, "id" | "username" | "displayName" | "avatarUrl">;
+  author: Pick<User, "id" | "username" | "avatarUrl">;
   question: string;
   answer: string | null;
   createdAt: ISODate;
   answeredAt: ISODate | null;
 }
 
-export interface Sale {
+export interface DashboardSale {
   id: ID;
-  projectId: ID;
-  projectTitle: string;
   buyerUsername: string;
-  amountCents: number;
-  currency: string;
+  projectTitle: string;
+  projectSlug: string;
+  priceAtPurchase: string;
+  platformFeeAmount: string;
+  sellerEarningAmount: string;
+  status: string;
   createdAt: ISODate;
+  paidAt: ISODate | null;
+}
+
+export interface DashboardListing {
+  id: ID;
+  title: string;
+  slug: string;
+  price: string;
+  status: ProjectStatus;
+  viewCount: number;
+  downloadCount: number;
+  salesCount: number;
+  revenue: string;
+  createdAt: ISODate;
+  updatedAt: ISODate;
+}
+
+export interface DashboardSummary {
+  lifetimeRevenue: string;
+  availableBalance: string;
+  pendingBalance: string;
+  nextUnlockDate: ISODate | null;
+  totalSales: number;
+  totalPublishedListings: number;
+  totalDownloads: number;
 }
 
 export interface EarningsPoint {
-  date: ISODate; // day
-  amountCents: number;
+  date: ISODate;
+  earnings: string;
 }
 
-export interface Payout {
+export interface PayoutEntry {
   id: ID;
-  amountCents: number;
-  currency: string;
-  status: "pending" | "processing" | "paid" | "failed";
+  amount: string;
+  destinationCardLast4: string | null;
+  status: string;
+  adminNote: string | null;
   requestedAt: ISODate;
-  paidAt: ISODate | null;
-  method: string; // e.g. "stripe_connect"
+  processedAt: ISODate | null;
 }
 
-export interface PayoutSummary {
-  availableCents: number;
-  pendingCents: number;
-  lifetimeCents: number;
-  currency: string;
+export interface PendingBalanceItem {
+  amount: string;
+  unlocksAt: ISODate;
+}
+
+export interface PayoutsMine {
+  availableBalance: string;
+  pendingBalance: PendingBalanceItem[];
+  payouts: PayoutEntry[];
+}
+
+export interface PayoutRequestInput {
+  amount: string;
+  cardNumber: string;
 }
 
 export interface Report {
@@ -114,19 +168,53 @@ export interface Report {
 export interface AuditLogEntry {
   id: ID;
   actor: Pick<User, "id" | "username">;
-  action: string;      // e.g. "project.remove"
-  target: string;      // e.g. "project:abc123"
+  action: string;
+  target: string;
   createdAt: ISODate;
   meta: Record<string, unknown> | null;
 }
 
 export interface BrowseFilters {
   q?: string;
-  categories?: string[];
-  tags?: string[];
+  category?: string;
+  tags?: string;
+  techStack?: string;
+  licenseType?: string;
   minPrice?: number;
   maxPrice?: number;
-  sort?: "recent" | "popular" | "price_asc" | "price_desc" | "top_rated";
+  featured?: boolean;
+  ordering?: string;
   page?: number;
   pageSize?: number;
+}
+
+export interface OrderResponse {
+  id: ID;
+  status: string;
+  price: string;
+  redirectUrl: string;
+}
+
+export interface Purchase {
+  id: ID;
+  projectId: ID;
+  title: string;
+  slug: string;
+  description: string;
+  price: string;
+  coverImage: string | null;
+  techStack: string[];
+  licenseType: string | null;
+  version: number | null;
+  paidAt: ISODate;
+}
+
+export interface NotificationItem {
+  id: ID;
+  type: string;
+  title: string;
+  body: string;
+  link: string;
+  isRead: boolean;
+  createdAt: ISODate;
 }

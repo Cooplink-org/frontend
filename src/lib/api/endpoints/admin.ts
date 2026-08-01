@@ -1,27 +1,48 @@
-import { NotImplementedError } from "../client";
-import type { AuditLogEntry, Listing, Report, User } from "../types";
+import { request } from "../client";
+import type { Report, AuditLogEntry } from "../types";
 
 export const adminApi = {
-  async reports(_status: "open" | "actioned" | "dismissed" = "open"): Promise<Report[]> {
-    throw new NotImplementedError("GET /admin/reports");
+  async reports(statusFilter: "open" | "actioned" | "dismissed" = "open"): Promise<Report[]> {
+    const raw = await request<Record<string, unknown>[]>("/moderation/admin/reports/", {
+      query: { status: statusFilter },
+    });
+    return raw.map(normalizeReport);
   },
-  async resolveReport(_id: string, _action: "dismiss" | "action"): Promise<void> {
-    throw new NotImplementedError("POST /admin/reports/:id/resolve");
+  async resolveReport(id: string, action: "dismiss" | "action"): Promise<void> {
+    await request(`/moderation/admin/reports/${id}/`, {
+      method: "PATCH",
+      body: { status: action === "dismiss" ? "dismissed" : "actioned" },
+    });
   },
-  async users(_q?: string): Promise<User[]> {
-    throw new NotImplementedError("GET /admin/users");
+  async users(q?: string): Promise<Record<string, unknown>[]> {
+    const raw = await request<Record<string, unknown>[]>("/moderation/admin/users/", {
+      query: q ? { q } : undefined,
+    });
+    return raw.map(normalizeAdminUser);
   },
-  async setUserBanned(_id: string, _banned: boolean): Promise<void> {
-    throw new NotImplementedError("POST /admin/users/:id/ban");
+  async setUserBanned(id: string, banned: boolean): Promise<void> {
+    const endpoint = banned ? "ban" : "unban";
+    await request(`/moderation/admin/users/${id}/${endpoint}/`, {
+      method: "POST",
+    });
   },
-  async projects(_status?: string): Promise<Listing[]> {
-    throw new NotImplementedError("GET /admin/projects");
+  async projects(statusFilter?: string): Promise<Record<string, unknown>[]> {
+    const raw = await request<Record<string, unknown>[]>("/moderation/admin/projects/", {
+      query: statusFilter ? { status: statusFilter } : undefined,
+    });
+    return raw.map(normalizeAdminProject);
   },
-  async setProjectRemoved(_id: string, _removed: boolean): Promise<void> {
-    throw new NotImplementedError("POST /admin/projects/:id/remove");
+  async setProjectRemoved(id: string, removed: boolean): Promise<void> {
+    const endpoint = removed ? "delete" : "restore";
+    await request(`/moderation/admin/projects/${id}/${endpoint}/`, {
+      method: "POST",
+    });
   },
-  async auditLog(_limit = 100): Promise<AuditLogEntry[]> {
-    throw new NotImplementedError("GET /admin/audit");
+  async auditLog(limit = 100): Promise<AuditLogEntry[]> {
+    const raw = await request<Record<string, unknown>[]>("/moderation/admin/log/", {
+      query: { limit },
+    });
+    return raw.map(normalizeAuditEntry);
   },
 };
 
@@ -31,3 +52,61 @@ export const adminKeys = {
   projects: (status?: string) => ["admin", "projects", status ?? ""] as const,
   audit: () => ["admin", "audit"] as const,
 };
+
+function normalizeReport(raw: Record<string, unknown>): Report {
+  const targetRaw = raw.target as Record<string, unknown> | null;
+  const reporterRaw = raw.reporter as Record<string, unknown> | null;
+  return {
+    id: raw.id as Report["id"],
+    target: {
+      type: (targetRaw?.type as Report["target"]["type"]) ?? "project",
+      id: (targetRaw?.id ?? raw.target_id) as string,
+      label: (targetRaw?.label ?? raw.target_label ?? "") as string,
+    },
+    reporter: {
+      id: (reporterRaw?.id ?? raw.reporter_id) as string,
+      username: (reporterRaw?.username ?? raw.reporter_username) as string,
+    },
+    reason: raw.reason as string,
+    body: (raw.body as string | null) ?? null,
+    status: (raw.status as Report["status"]) ?? "open",
+    createdAt: raw.created_at as string,
+  };
+}
+
+function normalizeAdminUser(raw: Record<string, unknown>): Record<string, unknown> {
+  return {
+    id: raw.id,
+    username: raw.username,
+    role: raw.is_staff === true ? "admin" : "user",
+    createdAt: raw.created_at ?? raw.date_joined,
+    isBanned: raw.is_banned ?? raw.is_active === false,
+  };
+}
+
+function normalizeAdminProject(raw: Record<string, unknown>): Record<string, unknown> {
+  const sellerRaw = raw.seller_profile as Record<string, unknown> | null;
+  return {
+    id: raw.id,
+    title: raw.title,
+    slug: raw.slug,
+    seller: sellerRaw ? { username: sellerRaw.username } : { username: raw.seller_username ?? "—" },
+    status: raw.status,
+    price: raw.price,
+  };
+}
+
+function normalizeAuditEntry(raw: Record<string, unknown>): AuditLogEntry {
+  const actorRaw = raw.actor as Record<string, unknown> | null;
+  return {
+    id: raw.id as AuditLogEntry["id"],
+    actor: {
+      id: (actorRaw?.id ?? raw.actor_id) as string,
+      username: (actorRaw?.username ?? raw.actor_username) as string,
+    },
+    action: raw.action as string,
+    target: raw.target as string,
+    createdAt: raw.created_at as string,
+    meta: (raw.meta as Record<string, unknown> | null) ?? null,
+  };
+}

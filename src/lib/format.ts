@@ -11,6 +11,21 @@ export function formatMoney(cents: number | null | undefined, currency = "USD"):
   }
 }
 
+/**
+ * Format a decimal string amount in UZS (Uzbekistani Som).
+ * The API returns amounts as decimal strings like "180000.00".
+ */
+export function formatUZS(amount: string | number | null | undefined): string {
+  if (amount === null || amount === undefined) return "—";
+  const n = typeof amount === "string" ? parseFloat(amount) : amount;
+  if (Number.isNaN(n)) return "—";
+  return new Intl.NumberFormat("uz-UZ", {
+    style: "currency",
+    currency: "UZS",
+    maximumFractionDigits: 0,
+  }).format(n);
+}
+
 export function formatCompactNumber(n: number | null | undefined): string {
   if (n === null || n === undefined) return "—";
   return new Intl.NumberFormat("en-US", { notation: "compact" }).format(n);

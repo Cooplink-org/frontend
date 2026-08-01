@@ -1,30 +1,33 @@
-/**
- * Cooplink API client.
- *
- * NOTE: this is a swappable stub. Endpoint paths, request/response shapes,
- * auth header format, pagination envelope, and error format will all be
- * replaced 1:1 from the API docs once provided. UI code should NOT need to
- * change when that happens — only this file, `types.ts`, and the files
- * under `endpoints/` will.
- *
- * Everything in `endpoints/` currently throws NotImplementedError. That is
- * intentional — the UI must render real loading/error/empty states rather
- * than pretend to have data.
- */
-
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "/api";
 
-const AUTH_TOKEN_KEY = "cooplink.auth_token";
+const ACCESS_TOKEN_KEY = "cooplink_access_token";
+const REFRESH_TOKEN_KEY = "cooplink_refresh_token";
 
-export function getAuthToken(): string | null {
+export function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(AUTH_TOKEN_KEY);
+  return window.localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
-export function setAuthToken(token: string | null) {
+export function setAccessToken(token: string | null) {
   if (typeof window === "undefined") return;
-  if (token) window.localStorage.setItem(AUTH_TOKEN_KEY, token);
-  else window.localStorage.removeItem(AUTH_TOKEN_KEY);
+  if (token) window.localStorage.setItem(ACCESS_TOKEN_KEY, token);
+  else window.localStorage.removeItem(ACCESS_TOKEN_KEY);
+}
+
+export function getRefreshToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
+export function setRefreshToken(token: string | null) {
+  if (typeof window === "undefined") return;
+  if (token) window.localStorage.setItem(REFRESH_TOKEN_KEY, token);
+  else window.localStorage.removeItem(REFRESH_TOKEN_KEY);
+}
+
+export function clearTokens() {
+  setAccessToken(null);
+  setRefreshToken(null);
 }
 
 export class ApiError extends Error {
@@ -59,6 +62,13 @@ export interface RequestOptions {
   auth?: boolean;
 }
 
+export interface Paginated<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 function buildUrl(path: string, query?: RequestOptions["query"]): string {
   const url = new URL(path.startsWith("http") ? path : `${API_BASE}${path}`, typeof window !== "undefined" ? window.location.origin : "http://localhost");
   if (query) {
@@ -70,47 +80,87 @@ function buildUrl(path: string, query?: RequestOptions["query"]): string {
   return url.toString();
 }
 
+export async function refreshTokens(): Promise<boolean> {
+  const refresh = getRefreshToken();
+  if (!refresh) return false;
+  try {
+    const res = await fetch(buildUrl("/token/refresh/"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh }),
+    });
+    if (!res.ok) {
+      clearTokens();
+      return false;
+    }
+    const data = await res.json();
+    setAccessToken(data.access);
+    if (data.refresh) setRefreshToken(data.refresh);
+    return true;
+  } catch {
+    clearTokens();
+    return false;
+  }
+}
+
 export async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
-  const { method = "GET", body, query, signal, auth = true } = opts;
+  const { method = "GET", body: rawBody, query, signal, auth = true } = opts;
 
   const headers: Record<string, string> = {
     Accept: "application/json",
   };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (rawBody !== undefined) headers["Content-Type"] = "application/json";
   if (auth) {
-    const token = getAuthToken();
+    const token = getAccessToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(buildUrl(path, query), {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-    signal,
-    credentials: "include",
-  });
+  const body = rawBody === undefined ? undefined : JSON.stringify(rawBody);
+
+  let res = await fetch(buildUrl(path, query), { method, headers, body, signal });
+
+  if (res.status === 401 && auth) {
+    const refreshed = await refreshTokens();
+    if (refreshed) {
+      const newToken = getAccessToken();
+      if (newToken) headers.Authorization = `Bearer ${newToken}`;
+      res = await fetch(buildUrl(path, query), { method, headers, body, signal });
+    }
+  }
 
   const isJson = res.headers.get("content-type")?.includes("application/json");
-  const payload = isJson ? await res.json().catch(() => null) : await res.text().catch(() => null);
+  const payload = isJson ? await res.json().catch(() => null) : null;
 
   if (!res.ok) {
-    const err = payload as { code?: string; message?: string; details?: unknown } | null;
-    throw new ApiError(
-      res.status,
-      err?.code ?? `http_${res.status}`,
-      err?.message ?? res.statusText ?? "Request failed",
-      err?.details,
-    );
+    let message = res.statusText || "Request failed";
+    let details: unknown = undefined;
+    if (payload && typeof payload === "object") {
+      if (typeof payload.detail === "string") {
+        message = payload.detail;
+      } else {
+        const fieldErrors = Object.entries(payload)
+          .filter(([, v]) => Array.isArray(v))
+          .map(([k, v]) => `${k}: ${(v as string[]).join(", ")}`)
+          .join("; ");
+        if (fieldErrors) message = fieldErrors;
+        details = payload;
+      }
+    }
+    throw new ApiError(res.status, `http_${res.status}`, message, details);
   }
 
   return payload as T;
 }
 
-/** Pagination envelope — replace shape once API docs land. */
-export interface Paginated<T> {
-  items: T[];
-  page: number;
-  pageSize: number;
-  total: number;
-  hasMore: boolean;
+function camelize(str: string): string {
+  return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+export function mapKeys<T extends Record<string, unknown>>(obj: T): Record<string, unknown> {
+  if (!obj || typeof obj !== "object") return obj as unknown as Record<string, unknown>;
+  const result: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    result[camelize(k)] = v;
+  }
+  return result;
 }
