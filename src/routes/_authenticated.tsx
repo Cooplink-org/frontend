@@ -104,7 +104,9 @@ function AuthenticatedLayout() {
   if (!silentRefreshDone) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="font-mono text-sm text-muted-foreground">{t("common.loading")}</div>
+        <div className="font-mono text-sm text-muted-foreground" suppressHydrationWarning>
+          {t("common.loading")}
+        </div>
       </div>
     );
   }

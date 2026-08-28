@@ -13,6 +13,7 @@ export default defineConfig({
   vite: {
     server: {
       port: 3000,
+      allowedHosts: [".shares.zrok.io"],
       proxy: {
         "/api": {
           target: "http://localhost:8000",

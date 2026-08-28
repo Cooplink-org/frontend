@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as CrackItRouteImport } from './routes/crack-it'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -55,6 +56,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrackItRoute = CrackItRouteImport.update({
+  id: '/crack-it',
+  path: '/crack-it',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -223,6 +229,7 @@ const AuthenticatedDashboardListingsIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/crack-it': typeof CrackItRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/crack-it': typeof CrackItRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -290,6 +298,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/about': typeof AboutRoute
+  '/crack-it': typeof CrackItRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -326,6 +335,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/crack-it'
     | '/pricing'
     | '/privacy'
     | '/sitemap.xml'
@@ -360,6 +370,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/crack-it'
     | '/pricing'
     | '/privacy'
     | '/sitemap.xml'
@@ -392,6 +403,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/about'
+    | '/crack-it'
     | '/pricing'
     | '/privacy'
     | '/sitemap.xml'
@@ -428,6 +440,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AboutRoute: typeof AboutRoute
+  CrackItRoute: typeof CrackItRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -459,6 +472,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crack-it': {
+      id: '/crack-it'
+      path: '/crack-it'
+      fullPath: '/crack-it'
+      preLoaderRoute: typeof CrackItRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -770,6 +790,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AboutRoute: AboutRoute,
+  CrackItRoute: CrackItRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

@@ -8,6 +8,7 @@ export const payoutsApi = {
     const payoutsRaw = (raw.payouts as Record<string, unknown>[]) ?? [];
     return {
       availableBalance: raw.available_balance as string,
+      withdrawalFeePercent: (raw.withdrawal_fee_percent as string) ?? "0",
       pendingBalance: pendingRaw.map((p) => ({
         amount: p.amount as string,
         unlocksAt: p.unlocks_at as string,
@@ -40,6 +41,9 @@ function normalizePayoutEntry(raw: Record<string, unknown>): PayoutEntry {
   return {
     id: raw.id as PayoutEntry["id"],
     amount: raw.amount as string,
+    payoutFeePercent: (raw.payout_fee_percent as string) ?? "0",
+    payoutFeeAmount: (raw.payout_fee_amount as string) ?? "0",
+    netAmount: (raw.net_amount as string) ?? (raw.amount as string),
     destinationCardLast4: (raw.destination_card_last4 as string | null) ?? null,
     status: raw.status as string,
     adminNote: (raw.admin_note as string | null) ?? null,

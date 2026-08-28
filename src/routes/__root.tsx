@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import ClickSpark from "@/components/ClickSpark";
 import { setAccessToken, setRefreshToken } from "@/lib/api/client";
 import { handleAuthHash } from "@/lib/auth-hash";
 
@@ -190,15 +191,25 @@ function RootComponent() {
   if (!authHashHandled) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="font-mono text-sm text-muted-foreground">{t("common.loading")}</div>
+        <div className="font-mono text-sm text-muted-foreground" suppressHydrationWarning>
+          {t("common.loading")}
+        </div>
       </div>
     );
   }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster />
+      <ClickSpark
+        sparkColor="#a3e635"
+        sparkSize={10}
+        sparkRadius={25}
+        sparkCount={8}
+        duration={450}
+      >
+        <Outlet />
+        <Toaster />
+      </ClickSpark>
     </QueryClientProvider>
   );
 }

@@ -132,6 +132,9 @@ export interface EarningsPoint {
 export interface PayoutEntry {
   id: ID;
   amount: string;
+  payoutFeePercent: string;
+  payoutFeeAmount: string;
+  netAmount: string;
   destinationCardLast4: string | null;
   status: string;
   adminNote: string | null;
@@ -147,6 +150,7 @@ export interface PendingBalanceItem {
 export interface PayoutsMine {
   availableBalance: string;
   pendingBalance: PendingBalanceItem[];
+  withdrawalFeePercent: string;
   payouts: PayoutEntry[];
 }
 

@@ -71,6 +71,15 @@ function PayoutsPage() {
                     placeholder={t("payouts.amount_placeholder")}
                     className="h-9 w-full rounded-sm border border-border bg-background px-2 font-mono text-sm outline-none"
                   />
+                  {amount && parseFloat(amount) > 0 && (
+                    <div className="font-mono text-[11px] text-muted-foreground">
+                      {t("payouts.fee_note", { fee: s.withdrawalFeePercent })}
+                      <span className="text-foreground">
+                        {" "}
+                        {formatUZS((parseFloat(amount) * (1 - parseFloat(s.withdrawalFeePercent) / 100)).toFixed(2))}
+                      </span>
+                    </div>
+                  )}
                   <input
                     value={cardNumber}
                     onChange={(e) => setCardNumber(e.target.value.replace(/[^\d]/g, ""))}

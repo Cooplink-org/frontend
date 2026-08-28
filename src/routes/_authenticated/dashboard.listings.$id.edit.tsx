@@ -121,9 +121,11 @@ function EditListingPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
-        <p className="mt-3 font-mono text-sm text-muted-foreground">{t("edit_listing.loading")}</p>
+      <div className="flex min-h-[400px] flex-col items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-3 font-mono text-sm text-muted-foreground" suppressHydrationWarning>
+          {t("edit_listing.loading")}
+        </p>
       </div>
     );
   }

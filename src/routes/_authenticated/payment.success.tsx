@@ -20,7 +20,12 @@ function PaymentSuccessPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const payid = params.get("payid") || params.get("PayId") || params.get("payment_id") || "";
+    const payid =
+      params.get("payid") ||
+      params.get("PayId") ||
+      params.get("payment_id") ||
+      params.get("order_id") ||
+      "";
 
     if (!payid) {
       setState("error");

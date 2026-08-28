@@ -28,7 +28,9 @@ function AuthCallbackPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="font-mono text-sm text-muted-foreground">{t("auth.completing_signin")}</div>
+      <div className="font-mono text-sm text-muted-foreground" suppressHydrationWarning>
+        {t("auth.completing_signin")}
+      </div>
     </div>
   );
 }

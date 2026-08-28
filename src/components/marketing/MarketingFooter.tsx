@@ -16,6 +16,7 @@ export function MarketingFooter() {
             links={[
               { to: "/browse", label: "Browse" },
               { to: "/pricing", label: "Pricing" },
+              { to: "/crack-it", label: "Crack It" },
               { to: "/dashboard", label: "Sell" },
             ]}
           />
@@ -49,14 +50,25 @@ export function MarketingFooter() {
   );
 }
 
-function FooterCol({ heading, links }: { heading: string; links: { to: string; label: string }[] }) {
+function FooterCol({
+  heading,
+  links,
+}: {
+  heading: string;
+  links: { to: string; label: string }[];
+}) {
   return (
     <div>
-      <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">{heading}</div>
+      <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+        {heading}
+      </div>
       <ul className="mt-3 space-y-2">
         {links.map((l) => (
           <li key={l.to}>
-            <Link to={l.to} className="text-sm text-foreground/80 transition-colors hover:text-foreground">
+            <Link
+              to={l.to}
+              className="text-sm text-foreground/80 transition-colors hover:text-foreground"
+            >
               {l.label}
             </Link>
           </li>

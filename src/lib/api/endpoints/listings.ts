@@ -78,15 +78,19 @@ export const listingsApi = {
       body: { project: input.projectId, reason: normalizedReason, detail: input.body },
     });
   },
-  async purchase(projectId: string | number): Promise<{ orderId: number; checkoutUrl: string; payid: string }> {
+  async purchase(
+    projectId: string | number,
+    provider?: string,
+  ): Promise<{ orderId: number; checkoutUrl: string; payid: string; provider: string }> {
     const raw = await request<Record<string, unknown>>("/orders/", {
       method: "POST",
-      body: { project_id: projectId },
+      body: { project_id: projectId, ...(provider ? { payment_provider: provider } : {}) },
     });
     return {
       orderId: raw.id as number,
       checkoutUrl: (raw.redirect_url as string) || "",
       payid: (raw.payid as string) || "",
+      provider: (raw.provider as string) || "",
     };
   },
   async orderStatus(orderId: number): Promise<{ id: number; status: string; projectSlug: string }> {
@@ -98,10 +102,21 @@ export const listingsApi = {
     };
   },
   async verifyPayment(payid: string): Promise<{ status: string; orderId?: number }> {
-    return request("/payments/mirpay/verify/", {
+    return request("/payments/verify/", {
       method: "POST",
       body: { payid },
     });
+  },
+  async paymentProviders(): Promise<{ provider: string; displayName: string; isDefault: boolean }[]> {
+    const raw = await request<{ providers: { provider: string; display_name: string; is_default: boolean }[] }>(
+      "/payments/providers/",
+      { auth: false },
+    );
+    return (raw.providers ?? []).map((p) => ({
+      provider: p.provider,
+      displayName: p.display_name,
+      isDefault: p.is_default,
+    }));
   },
   async myPurchases(): Promise<Purchase[]> {
     const raw = await request<Record<string, unknown>[]>("/orders/my-purchases/");

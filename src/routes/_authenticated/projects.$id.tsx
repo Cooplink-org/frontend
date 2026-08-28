@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Flag, Github, Star } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -35,6 +36,10 @@ function ProjectDetailPage() {
     queryFn: () => authApi.me(),
   });
   const me = meQuery.data;
+  const providersQuery = useQuery({
+    queryKey: ["payments", "providers"],
+    queryFn: () => listingsApi.paymentProviders(),
+  });
   const projectQuery = useQuery({
     queryKey: listingKeys.detail(id),
     queryFn: () => listingsApi.get(id),
@@ -52,6 +57,9 @@ function ProjectDetailPage() {
   const [reportReason, setReportReason] = useState("");
   const [reportBody, setReportBody] = useState("");
   const [submittingReport, setSubmittingReport] = useState(false);
+
+  const providers = providersQuery.data ?? [];
+  const [provider, setProvider] = useState<string>(providers[0]?.provider ?? "");
 
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewBody, setReviewBody] = useState("");
@@ -459,10 +467,10 @@ function ProjectDetailPage() {
                 <div className="mt-1 font-mono text-3xl tracking-tight text-foreground">
                   {formatUZS(project.price)}
                 </div>
-                <button
+                <motion.button
                   onClick={async () => {
                     try {
-                      const { orderId, checkoutUrl, payid } = await listingsApi.purchase(project.id);
+                      const { orderId, checkoutUrl, payid } = await listingsApi.purchase(project.id, provider);
                       navigate({
                         to: "/payment/$orderId",
                         params: { orderId: String(orderId) },
@@ -472,10 +480,39 @@ function ProjectDetailPage() {
                       toast.error(err instanceof Error ? err.message : t("project.toast.purchase_failed"));
                     }
                   }}
-                  className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-sm bg-primary text-sm font-medium text-primary-foreground"
+                  disabled={providers.length === 0}
+                  whileTap={{ scale: 0.95 }}
+                  className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-sm bg-primary text-sm font-medium text-primary-foreground disabled:opacity-50"
                 >
                   {t("project.buy")}
-                </button>
+                </motion.button>
+                {providers.length > 1 && (
+                  <div className="mt-3 space-y-1.5">
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {t("project.pay_with")}
+                    </div>
+                    {providers.map((p) => (
+                      <label
+                        key={p.provider}
+                        className="flex cursor-pointer items-center gap-2 rounded-sm border border-border-subtle px-3 py-2 font-mono text-xs"
+                      >
+                        <input
+                          type="radio"
+                          name="payment_provider"
+                          checked={provider === p.provider}
+                          onChange={() => setProvider(p.provider)}
+                          className="accent-primary"
+                        />
+                        <span className="text-foreground">{p.displayName}</span>
+                        {p.isDefault && (
+                          <span className="ml-auto text-[10px] text-muted-foreground">
+                            {t("project.default_provider")}
+                          </span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                )}
                 <p className="mt-3 text-xs text-muted-foreground">
                   {t("project.buy_desc", { license: project.licenseType ? ` · ${project.licenseType}` : "" })}
                 </p>

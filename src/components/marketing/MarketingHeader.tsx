@@ -7,6 +7,7 @@ import { getAccessToken } from "@/lib/api/client";
 const NAV = [
   { to: "/browse", label: "Browse" },
   { to: "/pricing", label: "Pricing" },
+  { to: "/crack-it", label: "Crack It" },
   { to: "/about", label: "About" },
 ];
 
@@ -15,7 +16,11 @@ export function MarketingHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isLoggedIn = typeof window !== "undefined" && !!getAccessToken();
   const { i18n } = useTranslation();
-  const lang = i18n.language?.startsWith("uz") ? "uz" : i18n.language?.startsWith("ru") ? "ru" : "en";
+  const lang = i18n.language?.startsWith("uz")
+    ? "uz"
+    : i18n.language?.startsWith("ru")
+      ? "ru"
+      : "en";
   const LANGS = [
     { code: "en" as const, label: "EN" },
     { code: "ru" as const, label: "RU" },
@@ -78,30 +83,30 @@ export function MarketingHeader() {
           </div>
 
           <div className="flex items-center gap-2">
-          {isLoggedIn ? (
-            <Link
-              to="/dashboard"
-              className="inline-flex h-8 items-center rounded-sm bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
-            >
-              Dashboard
-            </Link>
-          ) : (
-            <>
+            {isLoggedIn ? (
               <Link
-                to="/auth/sign-in"
-                className="inline-flex h-8 items-center rounded-sm px-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                Sign in
-              </Link>
-              <Link
-                to="/auth/sign-in"
+                to="/dashboard"
                 className="inline-flex h-8 items-center rounded-sm bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
               >
-                Get started
+                Dashboard
               </Link>
-            </>
-          )}
-        </div>
+            ) : (
+              <>
+                <Link
+                  to="/auth/sign-in"
+                  className="inline-flex h-8 items-center rounded-sm px-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/auth/sign-in"
+                  className="inline-flex h-8 items-center rounded-sm bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
+                >
+                  Get started
+                </Link>
+              </>
+            )}
+          </div>
         </div>
 
         <button
@@ -158,7 +163,10 @@ export function MarketingHeader() {
               {LANGS.map((l) => (
                 <button
                   key={l.code}
-                  onClick={() => { i18n.changeLanguage(l.code); setOpen(false); }}
+                  onClick={() => {
+                    i18n.changeLanguage(l.code);
+                    setOpen(false);
+                  }}
                   className={`rounded-sm px-2 py-0.5 font-mono text-[11px] transition-colors ${
                     lang === l.code
                       ? "bg-foreground text-background"
